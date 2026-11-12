@@ -1,5 +1,7 @@
 # 验收标准
 
+先在源码根目录运行 `python demo.py`。检查同一个记录 ID 的 `before_merge.status` 为 `unpublished`，`after_merge.status` 为 `verified`，并确认两个阶段的 revision 不同。此命令使用本机两个临时克隆；其中的 Git 合并用于模拟审核，不能代替真实 GitHub PR 审核或跨设备验收。
+
 | 检查 | 通过条件 |
 | --- | --- |
 | 两设备读同一事实 | 两个独立克隆刷新后，对同一记录返回同一 SHA 和内容。 |

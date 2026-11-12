@@ -17,14 +17,18 @@ flowchart LR
 
 下载或克隆仓库后，Windows 运行 `.\setup.cmd`，macOS/Linux 运行 `sh ./setup.sh`。入口会按需求选择路线、检查本机依赖，并可准备所选路线的本地安装。让智能体自动选型时使用 `--json`。详见[下载与安装](docs/quick-setup.md)。
 
-需要 Git、Python 3.12+。MCP 验收还需要 Python 虚拟环境及下面的依赖。在本仓库根目录执行：
+需要 Git、Python 3.12+。
+
+想先体验一次发布，在本仓库根目录运行 `python demo.py`（Windows 可用 `py -3.12 demo.py`，macOS/Linux 可用 `python3 demo.py`）。演练仅用合成数据，在本机创建临时上游和两个独立克隆，模拟审核合并。输出记录 ID、合并前的 `unpublished`、合并后读回核对的 `verified` 以及各自的 commit SHA。无需安装 MCP 依赖。
+
+完整测试（含 MCP）需要以下依赖。建议在 Python 虚拟环境中执行：
 
 ```sh
 python -m pip install -r requirements-mcp.txt
 python -m unittest discover -s tests -v
 ```
 
-Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚拟环境。测试只使用临时 Git 上游、两个独立克隆和合成记录，无需 GitHub 账号、模型 API、域名或隧道。默认部署是私有 Git 仓库加本地读写工具。支持 MCP 的客户端可以加一个只读服务，云端接入另按网络与认证能力选择。
+Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。测试只使用临时 Git 上游、两个独立克隆和合成记录，无需 GitHub 账号、模型 API、域名或隧道。默认部署是私有 Git 仓库加本地读写工具。支持 MCP 的客户端可以加一个只读服务，云端接入另按网络与认证能力选择。
 
 | 读者 | 从这里开始 |
 | --- | --- |
