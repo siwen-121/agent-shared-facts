@@ -15,6 +15,8 @@ flowchart LR
 
 ## 五分钟跑通
 
+下载或克隆仓库后，Windows 运行 `.\setup.cmd`，macOS/Linux 运行 `sh ./setup.sh`。入口会按需求选择路线、检查本机依赖，并可准备所选路线的本地安装。让智能体自动选型时使用 `--json`。详见[下载与安装](docs/quick-setup.md)。
+
 需要 Git、Python 3.12+。MCP 验收还需要 Python 虚拟环境及下面的依赖。在本仓库根目录执行：
 
 ```sh
@@ -26,6 +28,7 @@ Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚
 
 | 读者 | 从这里开始 |
 | --- | --- |
+| 下载后安装、选型与生成配置 | [下载与安装](docs/quick-setup.md) |
 | 接手部署或维护的智能体 | [AGENTS.md](AGENTS.md) |
 | 第一次部署、第二台设备、审核及故障恢复 | [部署手册](docs/deployment.md) |
 | Codex、Claude Code、Antigravity、Kimi、DeepSeek、Muse 和浏览器端 | [智能体接入](docs/agents.md) |
@@ -39,6 +42,6 @@ Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚
 
 Shared Facts is an agent-first reference implementation for sharing reviewed records across devices. One Git branch owns the published version of each record. An agent can prepare a candidate offline, reconcile it after reconnecting, submit it for review, and confirm it by fetching the merged record from another clone. The optional MCP adapter exposes allowlisted records through stdio or authenticated Streamable HTTP.
 
-Start with [AGENTS.md](AGENTS.md). Run `python -m pip install -r requirements-mcp.txt` in a virtual environment, then run `python -m unittest discover -s tests -v`. The demo uses synthetic data and two temporary local Git clones. See [deployment](docs/deployment.md), [client integration](docs/agents.md), [remote access](docs/remote.md), [device control and DevSpace](docs/devices.md), and [acceptance](docs/acceptance.md) for the full operator runbook.
+Start with [AGENTS.md](AGENTS.md) or run the [setup launcher](docs/quick-setup.md) for your platform. Run `python -m pip install -r requirements-mcp.txt` in a virtual environment, then run `python -m unittest discover -s tests -v`. The demo uses synthetic data and two temporary local Git clones. See [deployment](docs/deployment.md), [client integration](docs/agents.md), [remote access](docs/remote.md), [device control and DevSpace](docs/devices.md), and [acceptance](docs/acceptance.md) for the full operator runbook.
 
 Licensed under [MIT](LICENSE).

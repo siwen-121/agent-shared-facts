@@ -4,7 +4,7 @@ If asked to deploy this repository, run the local synthetic tests first. If aske
 
 ## Execution order
 
-1. **Discover.** Check Git and Python 3.12+, the existing repository and current branch. Ask for the intended data repository only if it cannot be determined from the user's instructions or deployment record. Never infer it from a similarly named repo.
+1. **Discover.** If deploying, use [the setup launcher](docs/quick-setup.md) with `--json` to select a route. Infer only the current OS and observable prerequisites. Supply the target OS, RDP hosting capability and OAuth compatibility from verified evidence or the user's input. Use its built-in preparation commands for the selected route. Check Git and Python 3.12+, the existing repository and current branch. Ask for the intended data repository only if it cannot be determined from the user's instructions or deployment record. Never infer it from a similarly named repo.
 2. **Rehearse.** From the source checkout, run the README tests using synthetic data. Record which transport and which client actually returned a tool result.
 3. **Set up the data source.** Use a separate private data repository, designate one published branch and give each device only the access it needs. Confirm both clones read the same commit and record after a successful fetch.
 4. **Choose a connector.** Prefer a local clone or an authenticated GitHub read connector. Add stdio MCP if the agent runs on a device. Configure remote MCP only when a client has a supported authentication path. Keep secrets in the host credential store.
