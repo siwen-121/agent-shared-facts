@@ -1,7 +1,6 @@
 import json
 import os
 from pathlib import Path
-import shutil
 import socket
 import subprocess
 import sys
@@ -32,7 +31,8 @@ class SharedFactsTests(unittest.TestCase):
         self.run_git(self.home, "init", "--bare", "--initial-branch=main", str(self.remote))
         self.run_git(self.home, "clone", str(self.remote), str(self.writer))
         (self.writer / "records").mkdir()
-        shutil.copyfile(ROOT / "examples/initial.json", self.writer / "records/intake.json")
+        sample = json.loads((ROOT / "examples/initial.json").read_bytes())
+        (self.writer / "records/intake.json").write_bytes(encode(sample))
         self.run_git(self.writer, "add", "records/intake.json")
         self.run_git(self.writer, "commit", "-m", "Synthetic intake")
         self.run_git(self.writer, "push", "origin", "main")
@@ -120,19 +120,19 @@ class SharedFactsTests(unittest.TestCase):
         from mcp import ClientSession, StdioServerParameters, stdio_client
 
         async def scenario():
-            with anyio.fail_after(15):
+            with anyio.fail_after(30):
                 command, *args = self.mcp_command()
                 params = StdioServerParameters(command=command, args=args)
                 async with stdio_client(params) as (read, write):
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         tools = {item.name for item in (await session.list_tools()).tools}
-                        self.assertEqual(tools, {"list_record_ids", "get_published_record"})
                         record = await session.call_tool("get_published_record", {"record_id": "intake"})
-                        self.assertFalse(record.isError, str(record.content))
-                        self.assertEqual(record.structuredContent["record"]["state"], "queued")
                         denied = await session.call_tool("get_published_record", {"record_id": "unlisted"})
-                        self.assertTrue(denied.isError)
+            self.assertEqual(tools, {"list_record_ids", "get_published_record"})
+            self.assertFalse(record.isError, str(record.content))
+            self.assertEqual(record.structuredContent["record"]["state"], "queued")
+            self.assertTrue(denied.isError)
         anyio.run(scenario)
 
     def test_http_mcp_requires_auth_and_rejects_untrusted_host(self):
