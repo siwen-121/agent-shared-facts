@@ -92,7 +92,7 @@ class Store:
         try:
             result = subprocess.run(
                 ["git", "-C", str(self.repo), *args],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout,
+                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=timeout,
                 env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_NO_REPLACE_OBJECTS": "1"},
             )
         except (OSError, subprocess.TimeoutExpired) as exc:

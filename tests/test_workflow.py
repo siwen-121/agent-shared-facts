@@ -1,10 +1,12 @@
 import json
 import os
 from pathlib import Path
+import queue
 import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 import urllib.error
@@ -116,24 +118,57 @@ class SharedFactsTests(unittest.TestCase):
         return [sys.executable, str(ROOT / "facts-mcp.py"), "--repo", str(self.reader), "--allow", "intake"]
 
     def test_stdio_mcp(self):
-        import anyio
-        from mcp import ClientSession, StdioServerParameters, stdio_client
+        with subprocess.Popen(self.mcp_command(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              env=self.env) as server:
+            responses = queue.Queue()
 
-        async def scenario():
-            with anyio.fail_after(30):
-                command, *args = self.mcp_command()
-                params = StdioServerParameters(command=command, args=args)
-                async with stdio_client(params) as (read, write):
-                    async with ClientSession(read, write) as session:
-                        await session.initialize()
-                        tools = {item.name for item in (await session.list_tools()).tools}
-                        record = await session.call_tool("get_published_record", {"record_id": "intake"})
-                        denied = await session.call_tool("get_published_record", {"record_id": "unlisted"})
-            self.assertEqual(tools, {"list_record_ids", "get_published_record"})
-            self.assertFalse(record.isError, str(record.content))
-            self.assertEqual(record.structuredContent["record"]["state"], "queued")
-            self.assertTrue(denied.isError)
-        anyio.run(scenario)
+            def read_lines():
+                for line in server.stdout:
+                    responses.put(line)
+                responses.put(b"")
+
+            reader = threading.Thread(target=read_lines, daemon=True)
+            reader.start()
+
+            def send(method, params, request_id=None):
+                message = {"jsonrpc": "2.0", "method": method, "params": params}
+                if request_id is not None:
+                    message["id"] = request_id
+                server.stdin.write(encode(message))
+                server.stdin.flush()
+                if request_id is None:
+                    return None
+                try:
+                    line = responses.get(timeout=20)
+                except queue.Empty:
+                    self.fail(f"Timed out waiting for MCP {method}.")
+                self.assertTrue(line, f"MCP server closed before responding to {method}.")
+                reply = json.loads(line)
+                self.assertEqual(reply["id"], request_id)
+                self.assertIn("result", reply)
+                return reply["result"]
+
+            try:
+                init = send("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
+                                           "clientInfo": {"name": "workflow-test", "version": "1"}}, 1)
+                self.assertIn("tools", init["capabilities"])
+                send("notifications/initialized", {})
+                tools = {tool["name"] for tool in send("tools/list", {}, 2)["tools"]}
+                self.assertEqual(tools, {"list_record_ids", "get_published_record"})
+                params = {"name": "get_published_record", "arguments": {"record_id": "intake"}}
+                record = send("tools/call", params, 3)
+                self.assertFalse(record.get("isError"), record.get("content"))
+                self.assertEqual(record["structuredContent"]["record"]["state"], "queued")
+                params["arguments"]["record_id"] = "unlisted"
+                self.assertTrue(send("tools/call", params, 4)["isError"])
+            finally:
+                server.stdin.close()
+                try:
+                    server.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    server.kill()
+                    server.wait(timeout=5)
+                reader.join(timeout=5)
 
     def test_http_mcp_requires_auth_and_rejects_untrusted_host(self):
         import anyio
