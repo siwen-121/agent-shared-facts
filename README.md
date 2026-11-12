@@ -1,2 +1,43 @@
-# agent-shared-facts
-An agent-first reference implementation for sharing reviewed facts across devices with Git and read-only MCP.
+# Shared Facts
+
+让 Windows、macOS 和不同智能体读到同一条已发布事实，让离线草稿、审阅中的候选和已生效的状态有明确区别。
+
+每条共享记录在指定 Git 分支上有一个固定 ID 和文件路径。智能体读取记录时同时得到 commit SHA。它可以整理候选，但候选必须经过对照、审阅和合并。第二个设备从上游读回实际内容后，才确认发布完成。
+
+```mermaid
+flowchart LR
+    A["设备或智能体"] -->|"读取记录与版本"| B["共享 Git 分支"]
+    A --> C["本地候选"]
+    C --> D["审阅与合并"]
+    D --> B
+    B -->|"另一设备拉取并核对"| E["发布回执"]
+```
+
+## 五分钟跑通
+
+需要 Git、Python 3.12+。MCP 验收还需要 Python 虚拟环境及下面的依赖。在本仓库根目录执行：
+
+```sh
+python -m pip install -r requirements-mcp.txt
+python -m unittest discover -s tests -v
+```
+
+Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚拟环境。测试只使用临时 Git 上游、两个独立克隆和合成记录，无需 GitHub 账号、模型 API、域名或隧道。默认部署是私有 Git 仓库加本地读写工具。支持 MCP 的客户端可以加一个只读服务，云端接入另按网络与认证能力选择。
+
+| 读者 | 从这里开始 |
+| --- | --- |
+| 接手部署或维护的智能体 | [AGENTS.md](AGENTS.md) |
+| 第一次部署、第二台设备、审核及故障恢复 | [部署手册](docs/deployment.md) |
+| Codex、Claude Code、Antigravity、Kimi、DeepSeek、Muse 和浏览器端 | [智能体接入](docs/agents.md) |
+| Tailscale 或 Cloudflare 域名、隧道和认证 | [远程接入](docs/remote.md) |
+| 能力边界、证据和上线检查 | [验收标准](docs/acceptance.md) |
+
+公开仓库存放程序、流程和合成示例。实际部署使用自己的共享数据仓库。研究原始文件、个人信息和凭据留在各自获准的位置，共享端只提交获准的摘要和可追溯的证据 ID。源文件与共享摘要的归属规则见部署手册。
+
+## English
+
+Shared Facts is an agent-first reference implementation for sharing reviewed records across devices. One Git branch owns the published version of each record. An agent can prepare a candidate offline, reconcile it after reconnecting, submit it for review, and confirm it by fetching the merged record from another clone. The optional MCP adapter exposes allowlisted records through stdio or authenticated Streamable HTTP.
+
+Start with [AGENTS.md](AGENTS.md). Run `python -m pip install -r requirements-mcp.txt` in a virtual environment, then run `python -m unittest discover -s tests -v`. The demo uses synthetic data and two temporary local Git clones. See [deployment](docs/deployment.md), [client integration](docs/agents.md), [remote access](docs/remote.md), and [acceptance](docs/acceptance.md) for the full operator runbook.
+
+Licensed under [MIT](LICENSE).
