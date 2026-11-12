@@ -8,6 +8,7 @@ goto done
 where python >nul 2>&1
 if errorlevel 1 (
   echo Python 3.12+ required. https://www.python.org/downloads/windows/
+  if "%~1"=="" pause
   exit /b 1
 )
 python "%~dp0setup-devices.py" %*

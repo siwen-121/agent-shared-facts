@@ -41,12 +41,13 @@ flowchart TB
     M --> Y["Mac 获准项目"]
 ```
 
-1. **从隔离项目开始。** 在每台目标设备准备一个含合成文件的测试 Git 工作区。安装 Git、Bash、Node.js 和 npm。Windows 可以使用 Git Bash，Mac 使用本机 Bash。先用 `npm view @waishnav/devspace@1.1.1 engines` 核对版本要求。以下以核查过的 npm 包版本 1.1.1 为例：
+1. **从隔离项目开始。** 在每台目标设备准备一个含合成文件的测试 Git 工作区。安装 Git、Bash、Node.js 和 npm。Windows 可以使用 Git Bash，Mac 使用本机 Bash。使用仓库提供的入口，先完成依赖审计再安装。审计服务不可达或发现高危、严重告警时，先停留在本地 Git 或只读 MCP 路线。
 
    ```sh
-   npx @waishnav/devspace@1.1.1 init
-   npx @waishnav/devspace@1.1.1 doctor
-   npx @waishnav/devspace@1.1.1 serve
+   python setup-devices.py --goal project --role target --prepare
+   python setup-devices.py --goal project --role target --devspace init
+   python setup-devices.py --goal project --role target --devspace doctor
+   python setup-devices.py --goal project --role target --devspace serve
    ```
 
    在 `init` 中选择远程 MCP 的接入模式，初次仅允许测试项目目录。每台设备用自己的配置、进程和 OAuth 授权。使用低权限操作系统账户，并避免在其可访问的位置保存高敏数据。DevSpace 的工作区白名单限制可打开的项目，涉及终端执行时也要考虑操作系统账户本身的权限。

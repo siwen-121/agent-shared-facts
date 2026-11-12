@@ -13,6 +13,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parent
 DEVSPACE_PACKAGE = "@waishnav/devspace@1.1.1"
+NPM_NETWORK = ("--fetch-timeout=12000", "--fetch-retries=1")
 DOCS = "docs/devices.md"
 NETWORK_DOCS = "docs/remote.md"
 HOST = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9.-]{0,252}")
@@ -124,8 +125,8 @@ def choose(label, options):
             return choices[int(answer) - 1]
 
 
-def run(args, *, cwd=None):
-    subprocess.run(args, cwd=cwd, check=True, stdout=sys.stderr)
+def run(args, *, cwd=None, timeout=None):
+    subprocess.run(args, cwd=cwd, check=True, stdout=sys.stderr, timeout=timeout)
 
 
 def require_program(name):
@@ -144,20 +145,23 @@ def require_bash():
 
 
 def prepare_facts(root, args):
-    require_program("git")
+    git = require_program("git")
     if args.data_repo:
         repo = args.data_repo.resolve()
         if not repo.is_dir():
             raise RuntimeError("共享仓库路径不存在，请先克隆私有数据仓库。")
-        status = subprocess.run([require_program("git"), "-C", str(repo), "rev-parse", "--git-dir"],
-                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if status.returncode:
-            raise RuntimeError("--data-repo 必须指向 Git 仓库。")
+        status = subprocess.run([git, "-C", str(repo), "rev-parse", "--show-toplevel"],
+                                capture_output=True, timeout=10)
+        if status.returncode or Path(os.fsdecode(status.stdout.rstrip(b"\r\n"))).resolve() != repo:
+            raise RuntimeError("--data-repo 必须指向数据仓库根目录。")
+        if repo == root:
+            raise RuntimeError("请使用独立数据仓库，公共源码仓库不能作为数据目录。")
     venv = root / ".venv"
     interpreter = venv / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     if not interpreter.is_file():
-        run([sys.executable, "-m", "venv", str(venv)])
-    run([str(interpreter), "-m", "pip", "install", "-r", str(root / "requirements-mcp.txt")])
+        run([sys.executable, "-m", "venv", str(venv)], timeout=120)
+    run([str(interpreter), "-m", "pip", "install", "--timeout", "15", "--retries", "2",
+         "--upgrade", "pip==26.3", "-r", str(root / "requirements-mcp.txt")], timeout=300)
     assets = {"python": str(interpreter)}
     if args.data_repo:
         records = [value for key in args.record for value in ("--allow", key)]
@@ -175,28 +179,48 @@ def prepare_facts(root, args):
     return assets
 
 
+def audit_devspace(npm, directory):
+    result = subprocess.run([npm, "audit", "--omit=dev", "--audit-level=high", "--json", *NPM_NETWORK],
+                            cwd=directory, capture_output=True, timeout=45)
+    try:
+        report = json.loads(result.stdout)
+        counts = report["metadata"]["vulnerabilities"]
+        high = int(counts["high"])
+        critical = int(counts["critical"])
+    except (ValueError, KeyError, TypeError) as exc:
+        raise RuntimeError("无法完成 DevSpace 依赖审计。检查 npm 注册表连接后重试。") from exc
+    if high or critical:
+        raise RuntimeError(f"DevSpace 安装或启动已暂停。依赖审计发现高危 {high} 项、严重 {critical} 项。"
+                           "请等待可通过审计的版本；共享事实可使用只读 MCP 或 GitHub 路线。")
+    if result.returncode:
+        raise RuntimeError("DevSpace 依赖审计失败。检查 npm 注册表连接后重试。")
+
+
 def devspace(root, action, local_os):
     node = require_program("node")
     npm = require_program("npm.cmd" if local_os == "windows" else "npm")
     require_program("git")
     require_bash()
-    version = subprocess.check_output([node, "-p", "process.versions.node"], text=True).strip()
+    version = subprocess.check_output([node, "-p", "process.versions.node"], text=True, timeout=10).strip()
     major, minor, *_ = map(int, version.split("."))
     if not (22 <= major < 27 and (major > 22 or minor >= 19)):
         raise RuntimeError("DevSpace 1.1.1 需要 Node.js >=22.19 且 <27。")
     install = root / ".setup" / "devspace"
     executable = install / "node_modules" / "@waishnav" / "devspace" / "bin" / "devspace.js"
-    if not executable.is_file():
-        if action != "prepare":
-            raise RuntimeError("先用 --prepare 安装仓库指定的 DevSpace 版本。")
+    if action == "prepare":
         install.mkdir(parents=True, exist_ok=True)
-        run([npm, "install", "--no-audit", "--no-fund", "--save-exact", DEVSPACE_PACKAGE], cwd=install)
+        run([npm, "install", "--package-lock-only", "--ignore-scripts", "--omit=dev", "--no-audit",
+             "--no-fund", "--save-exact", *NPM_NETWORK, DEVSPACE_PACKAGE], cwd=install, timeout=180)
+        audit_devspace(npm, install)
+        run([npm, "ci", "--omit=dev", "--no-audit", "--no-fund", *NPM_NETWORK],
+            cwd=install, timeout=300)
     if not executable.is_file():
-        raise RuntimeError("DevSpace 安装后缺少入口，请检查 npm 安装输出。")
+        raise RuntimeError("未找到 DevSpace 入口。先用 --prepare 完成审计和安装。")
     if action == "init" and (Path.home() / ".devspace" / "config.jsonc").exists():
         raise RuntimeError("已发现本机 DevSpace 配置。保留现有配置，先运行 --devspace doctor。")
     if action != "prepare":
-        run([node, str(executable), action])
+        audit_devspace(npm, install)
+        run([node, str(executable), action], timeout=30 if action == "doctor" else None)
     return {"devspace": str(executable)}
 
 
@@ -332,9 +356,11 @@ def main():
                 run([require_program("ssh"), "-o", f"HostKeyAlias={args.host}",
                      f"{args.user}@{plan['tcp']['address']}"])
             elif args.open and selected == "rdp" and local == "windows":
-                run([require_program("mstsc.exe"), f"/v:{args.host}"])
+                run([require_program("mstsc.exe"), f"/v:{plan['tcp']['address']}"])
             elif args.open:
                 raise RuntimeError("请用兼容的桌面客户端连接上面给出的地址。")
+    except subprocess.TimeoutExpired:
+        plan["error"] = "当前安装或检查超时。检查网络、代理和依赖源后重试。"
     except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         plan["error"] = str(exc)
     if args.json:

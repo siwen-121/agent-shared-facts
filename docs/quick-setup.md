@@ -27,7 +27,7 @@ python setup-devices.py --goal desktop --target-os windows --rdp-host yes --json
 ## 已经可以自动完成的动作
 
 - **共享事实本地 MCP**。先克隆私有数据仓库，再运行 `python setup-devices.py --goal facts --prepare --data-repo ../shared-data --record intake`。程序建立项目虚拟环境，安装 MCP 依赖，并生成 `.setup/shared-facts-mcp.json`。需要更多记录就重复传 `--record`。将生成的配置合入客户端自己的设置。现有不同内容的配置会保留。
-- **目标设备的 DevSpace**。在每台目标机上运行 `python setup-devices.py --goal project --role target --prepare`，把固定版本安装在项目的 `.setup/devspace/`。按相同的选型参数用 `--devspace init` 进入 DevSpace 官方引导，完成后可用 `--devspace doctor` 检查，用 `--devspace serve` 前台启动。已有用户配置时直接走检查流程。计划从云端接入的目标机，在这几条命令里都加 `--origin cloud --oauth compatible`，并按设备手册准备对应入口。
+- **目标设备的 DevSpace**。在每台目标机上运行 `python setup-devices.py --goal project --role target --prepare`。安装器先解析依赖锁并运行 npm 审计，只有通过才安装。审计失败、高危或严重告警会暂停此路线。已安装的 DevSpace 在初始化、检查和启动前也会重新审计。通过后按相同选型参数使用 `--devspace init`、`--devspace doctor` 和 `--devspace serve`。已有用户配置直接走检查流程。云端接入另需核实 OAuth 兼容性，并按设备手册准备对应入口。
 - **设备私网**。选到 Tailscale 路线后，在需安装的设备上加 `--install-network`。已有客户端会被复用。Windows 使用 WinGet，macOS 使用已有 Homebrew。其它环境按官方安装页操作。安装后由用户登录、批准系统网络权限并验证目标设备。
 - **验收 SSH、VNC 或 RDP 端口**。在发起机上给选型命令加 `--host macbook --probe --json`。目标须解析为私网 IPv4。要打开 SSH 客户端，改用 `--host macbook --user mac-operator --open`；在 Windows 发起 RDP 时用 `--host win-laptop --open`。屏幕共享用用户已有的 VNC 客户端打开探测确认的地址。真实会话按[设备远控手册](devices.md)核对账户和目标主机。
 

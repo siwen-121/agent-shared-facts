@@ -62,6 +62,26 @@ class DeviceSetupTests(unittest.TestCase):
         self.assertIn("error", result)
         self.assertNotIn("prepared", result)
 
+    def test_facts_setup_rejects_source_checkout_subdirectory(self):
+        if not (ROOT / ".git").exists():
+            self.skipTest("Requires a Git checkout to test parent discovery.")
+        result = self.cli("--goal", "facts", "--prepare", "--data-repo", str(ROOT / "docs"),
+                          "--record", "intake", code=1)
+        self.assertIn("仓库根目录", result["error"])
+
+    def test_devspace_audit_stops_high_risk_or_unavailable_results(self):
+        report = {"metadata": {"vulnerabilities": {"high": 1, "critical": 0}}}
+        for payload in (json.dumps(report).encode(), b""):
+            with self.subTest(payload=payload):
+                result = subprocess.CompletedProcess(["npm"], 1, stdout=payload)
+                with patch.object(setup.subprocess, "run", return_value=result):
+                    with self.assertRaises(RuntimeError):
+                        setup.audit_devspace("npm", ROOT)
+        report["metadata"]["vulnerabilities"]["high"] = 0
+        result = subprocess.CompletedProcess(["npm"], 0, stdout=json.dumps(report).encode())
+        with patch.object(setup.subprocess, "run", return_value=result):
+            setup.audit_devspace("npm", ROOT)
+
     def test_private_tcp_probe_accepts_loopback_and_rejects_public_address(self):
         with socket.socket() as server:
             server.bind(("127.0.0.1", 0))
