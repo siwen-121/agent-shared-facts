@@ -8,7 +8,7 @@
 
 ## 2. 在 Windows、macOS 或 Linux 准备两份克隆
 
-1. 先在公开代码库运行 README 的测试。创建 Python 环境用 `python -m venv .venv`。Windows 用 `.venv/Scripts/python.exe`，macOS/Linux 用 `.venv/bin/python` 运行和安装 MCP 依赖。
+1. 先在公开代码库运行 `python demo.py`，确认合并前和读回后的结果。接入 MCP 时再运行 README 中的完整测试。创建 Python 环境用 `python -m venv .venv`。Windows 用 `.venv/Scripts/python.exe`，macOS/Linux 用 `.venv/bin/python` 运行和安装 MCP 依赖。
 2. 在自己的 GitHub 账号创建 **Private** 仓库并初始化 README，指定 `main` 为发布分支。用各设备自己的身份登录。写入设备获得提案权限，读取设备采用最小权限。只读 MCP 服务可使用只读 deploy key 或最小范围的 Git 凭据，凭据通过 SSH agent、系统凭据管理器或受控服务账户提供。
 3. 向私有仓库导入一条合成记录。将公开仓库的 `examples/initial.json` 复制成私有仓库的 `records/intake.json`。建议在数据仓库根加入 `.gitattributes` 一行 `records/*.json text eol=lf`，避免换行转换引起误差。提交并合入发布分支。每条记录恰好有 `state`、`summary`、`evidence`，按脚本生成的 UTF-8 单行 JSON 保存。证据是获准共享的短 ID，解析规则由部署者记录。
 4. 在 GitHub 的 Settings 中检查 Rulesets 或 Branches 能否限制直接 push、force push 和删除，并要求 PR 与适用的状态检查。先验证账号套餐与仓库可见性支持所需规则。单人库若无法设置独立审批，可由仓库维护者审查冻结 diff 后合并并明确记录流程约束。多人库需要把审批放在远端分支规则里。此模板的 CI 测试代码库，私有数据仓库的分支规则和检查须由部署者另行配置。
@@ -40,7 +40,16 @@ git -C ../shared-data push -u origin proposal/review-intake
 python facts.py --repo ../shared-data verify ../intake-candidate.json
 ```
 
-退出码 0 与 `already-published` 代表上游当前记录等于候选内容，且候选 base 仍是上游的祖先。它验证当前内容，PR 链接单独证明由哪次变更发布。退出码 2 表示冲突，3 表示目标内容尚未生效，1 表示运行、验证或连接错误。共享回执写入记录 ID、候选文件名或任务 ID、PR URL、读回 commit SHA、验证时间。用获准途径传递候选，避免把本地 inbox 加入任何仓库。
+按退出码判断下一步：
+
+| 结果 | 下一步 |
+| --- | --- |
+| `0` · `already-published` | 上游当前内容等于候选，且候选 base 仍是上游祖先。保存读回 SHA，并用 PR 链接记录本次审核来源。 |
+| `3` · `ready` | 目标内容尚未生效。检查 PR 是否合入配置的发布分支，再从读端重试。 |
+| `2` · `conflict` | 保留候选，比较 base、当前上游和拟写内容。先核实是否已经有更新的记录。 |
+| `1` · 执行失败 | 查看错误，检查候选文件、仓库和认证。恢复连接后重新执行 `verify`。 |
+
+共享回执写入记录 ID、候选文件名或任务 ID、PR URL、读回 commit SHA、验证时间。用获准途径传递候选，避免把本地 inbox 加入任何仓库。
 
 ## 4. 离线和故障
 
