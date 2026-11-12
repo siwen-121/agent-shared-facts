@@ -2,6 +2,8 @@
 
 先按[部署手册](deployment.md)在两端读出同一个 SHA。把下面示例中的 Python、脚本和私有数据仓库换成各设备实际的绝对路径。示例为 macOS/Linux 路径。Windows 的 Python 可取虚拟环境的 `Scripts/python.exe`，在 JSON 中写成 `C:/path/to/python.exe` 或转义反斜杠。
 
+需要让 Agent 打开目标设备的工作区、读取项目文件或运行获准测试时，按[设备远控和 DevSpace](devices.md)注册对应设备的独立 MCP 连接器。下面的 Shared Facts MCP 配置用于读取共享记录。
+
 所有接入都跑同一个验证任务：列出允许的记录，读取 `intake` 并带回 `revision`、`read` 和 `record.state`，然后读取一个未授权的 ID 确认被拒。仅显示 Connected 时，登记为配置成功，等待模型实调用确认。通过 GitHub 读取的客户端用 commit 固定路径读取文件，并验证凭据无写权限。
 
 ## 本机 Agent

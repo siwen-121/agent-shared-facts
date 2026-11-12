@@ -1,6 +1,6 @@
 # Shared Facts agent entry point
 
-If asked to deploy this repository, run the local synthetic tests first. If asked to read or update a real record, find the user's designated shared-data repository, published branch and record ID. Read [deployment](docs/deployment.md) for exact commands. Only open [client integration](docs/agents.md) or [remote access](docs/remote.md) when the chosen setup requires it.
+If asked to deploy this repository, run the local synthetic tests first. If asked to read or update a real record, find the user's designated shared-data repository, published branch and record ID. Read [deployment](docs/deployment.md) for exact commands. Open [client integration](docs/agents.md) or [remote access](docs/remote.md) when the chosen setup requires it. For device-to-device SSH or desktop access, or for DevSpace on Windows or Mac, follow [device control and DevSpace](docs/devices.md). Verify the target host and workspace with a synthetic marker before starting real work.
 
 ## Execution order
 

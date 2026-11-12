@@ -30,6 +30,7 @@ Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚
 | 第一次部署、第二台设备、审核及故障恢复 | [部署手册](docs/deployment.md) |
 | Codex、Claude Code、Antigravity、Kimi、DeepSeek、Muse 和浏览器端 | [智能体接入](docs/agents.md) |
 | Tailscale 或 Cloudflare 域名、隧道和认证 | [远程接入](docs/remote.md) |
+| Windows 直连 Mac 或笔记本，逐设备接入 DevSpace MCP | [设备远控和 DevSpace](docs/devices.md) |
 | 能力边界、证据和上线检查 | [验收标准](docs/acceptance.md) |
 
 公开仓库存放程序、流程和合成示例。实际部署使用自己的共享数据仓库。研究原始文件、个人信息和凭据留在各自获准的位置，共享端只提交获准的摘要和可追溯的证据 ID。源文件与共享摘要的归属规则见部署手册。
@@ -38,6 +39,6 @@ Windows 上可用 `py -3.12`，macOS/Linux 可用 `python3`。推荐先创建虚
 
 Shared Facts is an agent-first reference implementation for sharing reviewed records across devices. One Git branch owns the published version of each record. An agent can prepare a candidate offline, reconcile it after reconnecting, submit it for review, and confirm it by fetching the merged record from another clone. The optional MCP adapter exposes allowlisted records through stdio or authenticated Streamable HTTP.
 
-Start with [AGENTS.md](AGENTS.md). Run `python -m pip install -r requirements-mcp.txt` in a virtual environment, then run `python -m unittest discover -s tests -v`. The demo uses synthetic data and two temporary local Git clones. See [deployment](docs/deployment.md), [client integration](docs/agents.md), [remote access](docs/remote.md), and [acceptance](docs/acceptance.md) for the full operator runbook.
+Start with [AGENTS.md](AGENTS.md). Run `python -m pip install -r requirements-mcp.txt` in a virtual environment, then run `python -m unittest discover -s tests -v`. The demo uses synthetic data and two temporary local Git clones. See [deployment](docs/deployment.md), [client integration](docs/agents.md), [remote access](docs/remote.md), [device control and DevSpace](docs/devices.md), and [acceptance](docs/acceptance.md) for the full operator runbook.
 
 Licensed under [MIT](LICENSE).

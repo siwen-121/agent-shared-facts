@@ -10,6 +10,7 @@
 | 只读与鉴权 | 只列出两个只读工具。越权 ID、未认证 HTTP 请求和伪造 Host 被拒。 |
 | 客户端接通 | 每个真实 Agent 在新会话调用工具或只读 GitHub 连接器，返回合成记录的真实 SHA。登记客户端、版本、读取范围和复测结果。 |
 | 远程路由和回退 | 从另一网络验收 TLS、有效凭据、缺失凭据和撤销结果，确认主机重启后能恢复服务。 |
+| 设备直连与 DevSpace | 从指定发起设备核验目标系统、主机名和获准操作。DevSpace 分别读取各设备的合成标记并拒绝白名单外测试路径。按[设备远控和 DevSpace](devices.md)记录 SSH、桌面和 MCP 各自的验收结果。 |
 
 本仓库测试覆盖 Git 读回、待审分支、离线与同记录冲突、其他记录并行修改、候选篡改、stdio MCP、回环 HTTP MCP。测试在临时 Git 上游完成。GitHub PR 权限、真实 Windows/Mac 客户端、Muse、DeepSeek、Kimi、Antigravity，以及真实域名和隧道均由每个部署独立验收。CI 定义提供 Linux、macOS、Windows 的运行入口，实际运行状态看目标仓库的 Actions。
 

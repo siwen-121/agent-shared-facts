@@ -64,4 +64,4 @@ env_http_headers = { CF-Access-Client-Id = "CF_ACCESS_CLIENT_ID", CF-Access-Clie
 | MCP 已连接但记录为空或陈旧 | 检查合成记录是否在 allowlist，测试 Git 只读凭据及刷新能力，比较权威分支 SHA。 |
 | 撤回外部访问 | 禁用发布路由，撤销该客户端的 Access 凭据，轮换后端 bearer，检查被撤销客户端无法调用。若怀疑隧道 token 泄露，按 Cloudflare 流程轮换并重启连接器。 |
 
-这两条线路只适用于本项目的只读 MCP。需要跨设备操作代码或本机文件时，使用各自获准的独立工作区与客户端，并给专门用途单独配置权限。桌面控制和终端执行留在独立的设备侧操作面。
+这里的命令和探针针对 Shared Facts 只读 MCP。[设备远控和 DevSpace](devices.md) 给出 Windows 直连 Mac 或笔记本的步骤，也说明如何为每台设备配置独立的 DevSpace 入口和 OAuth。
