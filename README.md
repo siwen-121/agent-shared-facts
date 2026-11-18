@@ -13,6 +13,10 @@ flowchart LR
     B -->|"另一设备拉取并核对"| E["发布回执"]
 ```
 
+## Agents MCP Skill
+
+[**Agents MCP**](skills/agents-mcp/SKILL.md) 是一份独立的 Codex MCP 插件构建/独立审查 Skill。它位于本公开仓库中，但可以单独复制或安装；这不是 Shared Facts 事实同步功能的必要依赖。
+
 ## 五分钟跑通
 
 下载或克隆仓库后，Windows 运行 `.\setup.cmd`，macOS/Linux 运行 `sh ./setup.sh`。入口会按需求选择路线、检查本机依赖，并可准备所选路线的本地安装。让智能体自动选型时使用 `--json`。详见[下载与安装](docs/quick-setup.md)。
