@@ -1,9 +1,11 @@
 ---
-name: codex-mcp-paper-review
-description: Configure or reuse a narrowly scoped Gemini or Claude MCP manuscript reviewer in Codex, then review factual writing, papers, argumentation, and overly defensive or evasive prose. Use when Codex has a substantive draft that needs independent review, not for every tiny edit.
+name: agents-mcp
+description: Guide Codex to create or reuse a secure MCP tool for on-demand Gemini or Claude review, including academic manuscripts and excessive defensive writing; keeps Codex as the sole implementer and verifies the resulting tool before use.
 ---
 
-# Codex × Gemini：论文与文章独立审查
+# Agents MCP
+
+**一份独立可复用的 Agent Skill**：让 Codex 在已有工作界面中自行创建或复用 MCP 接入工具，把 Gemini / Claude 作为按需调用的独立审查者。
 
 目标：**Codex 是唯一写作者和修改者；Gemini 是通过 MCP 调用的只读审稿员。** 同样可以按需接入 Claude 复核。此 Skill 提供配置和使用规约，**不是**一个预装好的模型工具或 MCP Server。
 
@@ -12,6 +14,10 @@ description: Configure or reuse a narrowly scoped Gemini or Claude MCP manuscrip
 > 阅读这个 Skill。先检查现有 Codex/MCP 配置，优先复用已经可用的 Gemini 审稿工具。若没有，请你自己创建一个**最小的本地 MCP 审稿工具**并注册到 Codex，使用低敏虚构文章测试真实调用结果。以后只在文章、论文的重要版本完成时调用 Gemini 独立审查，最后由你根据原文和来源核查、接受或拒绝修改建议。不要让我另开双 Agent 界面。
 
 所谓“让 Codex 自己做插件”，是**Codex 创建、配置并调用外部 MCP 工具**，不是修改 Codex 主程序，也不是仅把 Skill 放进去就有 API 权限。
+
+## 适用范围
+
+本 Skill 以“Codex 撰写初稿 → 通过 MCP 调用 Gemini 审查 → Codex 核实后自动执行修改”为可复现实例；同一个创建/注册/测试步骤也可复用于其他允许的 MCP 任务，但必须按新任务重新检查权限、实际工具能力及数据出站范围。**Skill 不等于 MCP Server**，只有实际创建、注册并成功调用后才能说插件已接入。
 
 ## 触发条件
 
