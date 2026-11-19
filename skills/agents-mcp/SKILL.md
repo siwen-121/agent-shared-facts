@@ -34,6 +34,27 @@ description: Guide Codex to create or reuse a secure MCP tool for on-demand Gemi
 3. 状态 `enabled` 只表示配置存在，**不能代替成功调用**。只有实际拿到审稿响应，才写“可用”。
 4. Claude 可选，但不意味着已把 Claude Code 所有编程功能接入：以实际暴露的只读复核工具为准。
 
+## 跨新会话的 MCP 发现与诊断
+
+MCP 是**由调用它的宿主注册**的。Codex 内注册 `claude_review`，是让 Codex 通过 MCP 使用 Claude API；不会让该工具出现在 Claude Code 的 `/plugin` 菜单里，也不等于安装了 Claude Code 插件。使用 Gemini/Claude 的 API Key 与能否登录对应客户端是两个独立问题。MCP Server 的存在、Skill 的可读性与新会话能否使用工具也应分开验证。
+
+| 观测 | 该观测能证明什么 | 还需核验什么 |
+| --- | --- | --- |
+| `codex mcp list` / `codex mcp get <server>` 显示 `enabled` | 当前 Codex 配置登记了该 MCP | 启动命令能否连接、正确工具是否出现在新会话 |
+| MCP `initialize` 和 `tools/list` 成功 | 传输/协议和工具清单可用 | 一次获准的只读工具调用能否返回结果 |
+| `models` 等元数据请求成功 | 当前网关至少能响应目录接口 | 目标模型的生成权限、额度、区域/代理是否允许请求 |
+| 真实调用得到审稿文本 | 此次模型请求成功 | Codex 是否逐条核对来源并修改/复验，不能自动认定建议正确 |
+| 新聊天找不到工具 | 可能启动了不同客户端、工作目录或配置范围 | 宿主实际读取哪个注册表、是否需重启，以及是否有同名服务冲突 |
+
+排查顺序：
+
+1. **先确认宿主**：Codex CLI/桌面、Claude Code、Gemini CLI、ChatGPT 网页使用不同的插件和 MCP 加载机制；不要用另一个客户端的插件列表证明本客户端缺失。对于 Codex，先看用户级注册与项目级配置的最终合并结果，确认工具不是只在一个工作目录内注册。对于 Gemini CLI，项目级 `.gemini/settings.json` 仅对匹配工作区生效；需要跨目录的工具可在核对风险后登记到用户级配置。
+2. **再看发现层**：从原工作区和一个新的、受信任的工作区分别检查 MCP 列表；重新启动宿主再开新会话，验证 `initialize → tools/list →` 一次只读 `tools/call`。保留服务名、工具名、版本、最小脱敏结果和测试时刻；不能仅凭列表上的 `Connected` 宣告完整工作流通过。
+3. **最后看模型和业务层**：对 API 返回的 `401/403`、配额 `429`、代理/区域 `400`、网络超时分别分类；没有新的证据就停止计费重试。模型无法生成时，不能把独立 MCP 握手成功误报为模型已调用。工具成功但目标业务未读回时，保持 `PARTIAL` / `BLOCKED`。
+4. **保留原来的权限**：只读 reviewer 不应因为排错而获得本地文件、Shell、任意写入、付款或发送权限；不绕过宿主的 Hook/plugin trust 审核，也不把密钥复制进仓库或排错记录。
+
+跨会话恢复的异步审稿需要明确的 `job_id`、持久化任务状态和结果回收路径；旧会话关闭后只应查询原任务状态，不重复创建相同的计费请求。是否能跨进程存活由具体 MCP 的实际实现和测试证明，不能从“后台线程”字样推断。
+
 ## 第二步：如缺失，由 Codex 生成并注册最小 MCP 插件
 
 让 Codex 查阅 [Codex MCP 官方文档](https://developers.openai.com/codex/mcp) 和当前操作系统/版本，创建一个本地 **stdio MCP Server**，只暴露 `review_manuscript`（或现成同用途的只读工具）。注册后检查配置并实调一次。
