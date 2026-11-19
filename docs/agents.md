@@ -12,6 +12,7 @@
 | --- | --- | --- |
 | Codex CLI | `codex mcp add shared-facts -- /absolute/python /absolute/facts-mcp.py --repo /absolute/data --allow intake` | `codex mcp list` 后在新会话发验证任务。[官方 MCP 文档](https://developers.openai.com/codex/mcp/) |
 | Claude Code | `claude mcp add --transport stdio --scope local shared-facts -- /absolute/python /absolute/facts-mcp.py --repo /absolute/data --allow intake` | `claude mcp list` 后用新会话发验证任务。[官方 MCP 文档](https://code.claude.com/docs/en/mcp) |
+| Gemini CLI | 按需将 `shared-facts` 合入工作区 `.gemini/settings.json`，若需要从多个工作目录打开新会话，则放在用户级 `~/.gemini/settings.json` 的 `mcpServers` 中；两者都使用下方的 stdio 配置格式，路径须替换为当前设备真实路径。 | 分别从原目录与另一受信任目录执行 `gemini mcp list`，检查 `Connected`；在新会话里实际调用只读工具并核对记录 ID、SHA。保留工具审批；MCP Connected 不等于 Gemini API 模型能生成。 |
 | Antigravity IDE | 打开 Agent 面板的 MCP Servers → Manage MCP Servers → View raw config，把下方对象合入 `mcpServers`。使用对应版本的全局配置或工作区配置。 | 重载 MCP 并发验证任务。Antigravity 的 ACP 在线状态仅验证客户端启动。IDE/CLI 需分别确认工具调用。[官方 MCP 文档](https://antigravity.google/docs/mcp) |
 | Kimi Code CLI | 若当前版本提供 `kimi mcp add`，先运行 `kimi mcp add --help` 验证，再用 `kimi mcp add shared-facts -- /absolute/python /absolute/facts-mcp.py --repo /absolute/data --allow intake`。支持配置文件的版本也可在启动时指定本地 MCP JSON。 | 检查 MCP 工具列表并发验证任务。网页版依账户的连接器能力处理。[官方 MCP 文档](https://moonshotai.github.io/kimi-code/en/customization/mcp.html) |
 
